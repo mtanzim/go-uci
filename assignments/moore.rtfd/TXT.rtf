@@ -1,0 +1,28 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2513
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica-Bold;\f1\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\b\fs24 \cf0 Moore\'92s Law and its Impact on Software Development
+\f1\b0 \
+\
+Moore\'92s law is the hypothesis that transistor density doubles every 2 years. This is based on historical trends. This is not a physical law, rather an observation. The expected exponential increase in density, leads to exponential increase in transistor speeds, as smaller transistors switch faster.\
+\
+However, this is no longer the case. There are a few physical limitations. First being power consumption. Transistors consume power as they switch. Additionally, increased transistor density leads to increased power consumption. Increased power leads to increased temperatures, which requires more sophisticated and powerful cooling solutions. Increased power and temperatures are therefore are limiting factors in terms of electronics design.\
+\
+In concrete terms, the dynamic power consumption of transistors are described by:\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 {{\NeXTGraphic Pasted Graphic.png \width8100 \height3320 \appleattachmentpadding0 \appleembedtype0 \appleaqc
+}¬}\
+\
+The important thing to note is the V, or the voltage swing, whose square is proportional to the power dissipated. As described by the Dennard scaling theory, the voltage swing should scale with the transistor size. Therefore, as density increases to meet Moore\'92s Law, the transistors must be reduced in size, and therefore use smaller voltages. The key issue here is that to meet physical laws, the threshold voltage to turn the transistor on can only be so low. The reduced voltage swing also introduces more noise in the signals, which leads to errors. \
+\
+Additionally, there is leakage power to consider, the power which is dissipated when the transistor is off. Smaller transistors lead to thinner insulators, which leads to increased leakage power. This leads to additional problems. \
+\
+The conjunction of issues described above lead to what is called the power wall. To remedy this lack of performance improvement from vertical scaling, one may scale horizontally instead: by adding more processors to the system. As a result, concurrent programming which must now make use of processors working in parallel become very important. The responsibility of achieving improved performance is now shared between hardware, and software, as the hardware needs to be adjusted to account for the diminishing adherence to Moore\'92s Law.\
+\
+\
+}
