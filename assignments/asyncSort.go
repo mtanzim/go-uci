@@ -36,12 +36,7 @@ func splitNumbers(numbers []int) [][]int {
 
 }
 
-func sortEach(numbers []int, messages chan bool) {
-	sort.Ints(numbers)
-	messages <- sort.IntsAreSorted(numbers)
-}
-
-func mergePartitions(a []int, b []int) []int {
+func mergePartitionPairs(a []int, b []int) []int {
 	temp := make([]int, 0)
 
 	i := 0
@@ -70,39 +65,46 @@ func mergePartitions(a []int, b []int) []int {
 
 }
 
-func mergeAll(partitions [][]int) []int {
+func mergeAllPartitions(partitions [][]int) []int {
 	temp := partitions[0]
 	for i := 1; i < len(partitions); i++ {
-		temp = mergePartitions(temp, partitions[i])
+		temp = mergePartitionPairs(temp, partitions[i])
 	}
 	return temp
 }
 
-func main() {
-	numbers := getNumbers()
-	fmt.Println("Original array: ")
-	fmt.Println(numbers)
-	partitions := splitNumbers(numbers)
-	fmt.Println("Unsorted partitions:")
-	fmt.Println(partitions)
+func sortEachPartition(numbers []int, messages chan bool) {
+	sort.Ints(numbers)
+	messages <- sort.IntsAreSorted(numbers)
+}
 
+func sortPartitions(partitions [][]int) {
 	numPartitions := len(partitions)
-
 	messages := make(chan bool, numPartitions)
-
 	for i := 0; i < numPartitions; i++ {
-		go sortEach(partitions[i], messages)
+		go sortEachPartition(partitions[i], messages)
 		done := <-messages
 		if !done {
 			panic("Unsorted partition!")
 		}
 	}
+}
 
+func main() {
+
+	numbers := getNumbers()
+	fmt.Println("Original array: ")
+	fmt.Println(numbers)
+
+	partitions := splitNumbers(numbers)
+	fmt.Println("Unsorted partitions:")
+	fmt.Println(partitions)
+
+	sortPartitions(partitions)
 	fmt.Println("Sorted partitions:")
 	fmt.Println(partitions)
 
-	sortedNumbers := mergeAll(partitions)
-
+	sortedNumbers := mergeAllPartitions(partitions)
 	if !sort.IntsAreSorted(sortedNumbers) {
 		panic("Array was not sortted!")
 	}
