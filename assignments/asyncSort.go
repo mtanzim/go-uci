@@ -93,7 +93,7 @@ func sortPartitions(partitions [][]int) {
 func main() {
 
 	numbers := getNumbers()
-	fmt.Println("Original array: ")
+	fmt.Println("Original array:")
 	fmt.Println(numbers)
 
 	partitions := splitNumbers(numbers)
@@ -106,7 +106,7 @@ func main() {
 
 	sortedNumbers := mergeAllPartitions(partitions)
 	if !sort.IntsAreSorted(sortedNumbers) {
-		panic("Array was not sortted!")
+		panic("Array was not sorted!")
 	}
 	fmt.Println("Sorted array:")
 	fmt.Println(sortedNumbers)
