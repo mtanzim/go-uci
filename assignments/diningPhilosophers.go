@@ -43,6 +43,7 @@ func (h *Host) runHost(wg *sync.WaitGroup) {
 	fmt.Println("Hello philosophers, I am the host")
 	i := 0
 	countDone := 0
+	// TODO: a more dynamic switching algo?
 	for countDone < NumPhilos {
 		h.mapLock.Lock()
 		switch i {
