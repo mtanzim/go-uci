@@ -1,0 +1,50 @@
+package main
+
+import (
+	"database/sql"
+	"log"
+
+	_ "github.com/mattn/go-sqlite3"
+)
+
+func main() {
+
+	database, _ := sql.Open("sqlite3", "./books.db")
+	tx, err := database.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer tx.Rollback()
+	statement, err := tx.Prepare(`
+		CREATE TABLE IF NOT EXISTS Book (
+			ID INTEGER PRIMARY KEY, 
+			Isbn TEXT, 
+			Title TEXT,
+			Author TEXT)
+		`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	statement.Exec()
+	statement, _ = tx.Prepare("INSERT INTO Book (Isbn, Title, Author) VALUES (?, ?, ?)")
+
+	books := []struct {
+		Isbn   string
+		Title  string
+		Author string
+	}{
+		{"234234", "Go Microservices", "Tanzim Mokammel"},
+		{"234235", "Go CLI", "Steve Smith"},
+		{"234236", "Go Systems", "John Doe"},
+	}
+
+	for _, book := range books {
+		if _, err := statement.Exec(book.Isbn, book.Title, book.Title); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.Fatal(err)
+	}
+}
