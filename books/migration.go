@@ -15,16 +15,16 @@ func main() {
 		log.Fatal(err)
 	}
 	defer tx.Rollback()
-	statement, err := tx.Prepare(`
-		CREATE TABLE IF NOT EXISTS Book (
+
+	statement, _ := tx.Prepare(`DROP TABLE Book`)
+	statement.Exec()
+	statement, _ = tx.Prepare(`
+		CREATE TABLE Book (
 			ID INTEGER PRIMARY KEY, 
-			Isbn TEXT, 
-			Title TEXT,
+			Isbn TEXT NOT NULL, 
+			Title TEXT NOT NULL,
 			Author TEXT)
 		`)
-	if err != nil {
-		log.Fatal(err)
-	}
 	statement.Exec()
 	statement, _ = tx.Prepare("INSERT INTO Book (Isbn, Title, Author) VALUES (?, ?, ?)")
 
