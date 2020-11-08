@@ -1,4 +1,13 @@
-// based off: https://github.com/bradtraversy/go_restapi
+/*
+based on: https://github.com/bradtraversy/go_restapi
+TODO:
+- Write tests
+- Use dependency injection for logging, db etc
+- Clean up error handling
+- Look at ORMs
+- Research input validation
+- DB indices/constraints etc.
+*/
 package main
 
 import (
@@ -11,9 +20,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// Book struct
 type Book struct {
-	ID     int    `json:"id"`
+	ID     int64  `json:"id"`
 	Isbn   string `json:"isbn"`
 	Title  string `json:"title"`
 	Author string `json:"author"`
@@ -21,9 +29,7 @@ type Book struct {
 
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Do stuff here
 		log.Println(r.RequestURI)
-		// Call the next handler, which can be another middleware in the chain, or the final handler.
 		next.ServeHTTP(w, r)
 	})
 }
@@ -32,7 +38,7 @@ func convertBookRows(rows *sql.Rows) []Book {
 
 	books := make([]Book, 0)
 	for rows.Next() {
-		var id int
+		var id int64
 		var isbn, title, author string
 		if err := rows.Scan(&id, &isbn, &title, &author); err != nil {
 			log.Fatal(err)
@@ -43,17 +49,17 @@ func convertBookRows(rows *sql.Rows) []Book {
 	return books
 }
 
-// Get single book
 func getBooks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	q := `SELECT id, Isbn, Title, Author FROM Book`
 	rows, err := db.Query(q)
+	defer rows.Close()
 	if err != nil {
 		http.Error(w, "Cannot get books", http.StatusInternalServerError)
+		return
 	}
 	books := convertBookRows(rows)
-	rows.Close()
 
 	json.NewEncoder(w).Encode(books)
 }
@@ -62,16 +68,15 @@ func getBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	params := mux.Vars(r)
-	id, prs := params["id"]
+	id := params["id"]
 
-	if !prs {
-		http.Error(w, "Please provide id", http.StatusBadRequest)
-
-	}
 	q := `SELECT id, Isbn, Title, Author FROM Book WHERE id=?`
 	rows, err := db.Query(q, id)
+	defer rows.Close()
+
 	if err != nil {
 		http.Error(w, "Cannot get books", http.StatusInternalServerError)
+		return
 	}
 
 	books := convertBookRows(rows)
@@ -83,10 +88,74 @@ func getBook(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO: use dependency injection
+func updateBook(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	params := mux.Vars(r)
+	id := params["id"]
+
+	var book Book
+	err := json.NewDecoder(r.Body).Decode(&book)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Cannot update book.", http.StatusBadRequest)
+		return
+	}
+
+	q := `UPDATE Book SET Isbn=?, Title=?, Author=? WHERE id=?`
+	res, err := db.Exec(q, book.Isbn, book.Title, book.Author, id)
+
+	if err != nil {
+		http.Error(w, "Cannot update book", http.StatusInternalServerError)
+		return
+	}
+
+	book.ID, _ = res.LastInsertId()
+	json.NewEncoder(w).Encode(book)
+}
+
+func deleteBook(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	params := mux.Vars(r)
+	id := params["id"]
+
+	q := `DELETE FROM Book WHERE id=?`
+	res, _ := db.Exec(q, id)
+
+	if rowsDeleted, _ := res.RowsAffected(); rowsDeleted != 1 {
+		http.Error(w, "Cannot delete book", http.StatusInternalServerError)
+		return
+	}
+
+	log.Println(res)
+	w.WriteHeader(http.StatusOK)
+}
+
+func createBook(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var book Book
+	err := json.NewDecoder(r.Body).Decode(&book)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Cannot create book.", http.StatusBadRequest)
+		return
+	}
+	q := `INSERT INTO Book (Isbn, Title, Author) VALUES (?, ?, ?)`
+	res, err := db.Exec(q, book.Isbn, book.Title, book.Author)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Cannot create book.", http.StatusBadRequest)
+		return
+	}
+	book.ID, _ = res.LastInsertId()
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(book)
+
+}
+
 var db *sql.DB
 
-// Main function
 func main() {
 	r := mux.NewRouter()
 
@@ -97,15 +166,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Route handles & endpoints
 	r.HandleFunc("/books", getBooks).Methods("GET")
 	r.HandleFunc("/books/{id}", getBook).Methods("GET")
-	// r.HandleFunc("/books", createBook).Methods("POST")
-	// r.HandleFunc("/books/{id}", updateBook).Methods("PUT")
-	// r.HandleFunc("/books/{id}", deleteBook).Methods("DELETE")
+	r.HandleFunc("/books", createBook).Methods("POST")
+	r.HandleFunc("/books/{id}", updateBook).Methods("PUT")
+	r.HandleFunc("/books/{id}", deleteBook).Methods("DELETE")
 
 	r.Use(loggingMiddleware)
 
-	// Start server
 	log.Fatal(http.ListenAndServe(":8000", r))
 }
