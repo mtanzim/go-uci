@@ -23,33 +23,33 @@ type Snake struct {
 	name string
 }
 
-func (a Cow) Eat() {
+func (_ Cow) Eat() {
 	fmt.Println("grass")
 }
-func (a Bird) Eat() {
+func (_ Bird) Eat() {
 	fmt.Println("worms")
 }
-func (a Snake) Eat() {
+func (_ Snake) Eat() {
 	fmt.Println("mice")
 }
 
-func (a Cow) Speak() {
+func (_ Cow) Speak() {
 	fmt.Println("moo")
 }
-func (a Bird) Speak() {
+func (_ Bird) Speak() {
 	fmt.Println("peep")
 }
-func (a Snake) Speak() {
+func (_ Snake) Speak() {
 	fmt.Println("hss")
 }
 
-func (a Cow) Move() {
+func (_ Cow) Move() {
 	fmt.Println("walk")
 }
-func (a Bird) Move() {
+func (_ Bird) Move() {
 	fmt.Println("fly")
 }
-func (a Snake) Move() {
+func (_ Snake) Move() {
 	fmt.Println("slither")
 }
 

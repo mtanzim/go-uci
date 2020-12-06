@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func getNumbers() []int {
@@ -73,19 +74,35 @@ func mergeAllPartitions(partitions [][]int) []int {
 	return temp
 }
 
-func sortEachPartition(numbers []int, messages chan bool) {
-	sort.Ints(numbers)
-	messages <- sort.IntsAreSorted(numbers)
+func sortEachPartition(numbers []int, jobs <-chan int, results chan<- bool) {
+
+	for j := range jobs {
+		fmt.Println("Started job", j)
+		fmt.Println("numbers", numbers)
+		time.Sleep(time.Second * 3)
+		sort.Ints(numbers)
+		results <- sort.IntsAreSorted(numbers)
+		fmt.Println("Completed job", j)
+	}
 }
 
+// https://gobyexample.com/worker-pools
 func sortPartitions(partitions [][]int) {
 	numPartitions := len(partitions)
-	messages := make(chan bool, numPartitions)
+	jobs := make(chan int, numPartitions)
+	results := make(chan bool, numPartitions)
 	for i := 0; i < numPartitions; i++ {
-		go sortEachPartition(partitions[i], messages)
-		done := <-messages
-		if !done {
-			panic("Unsorted partition!")
+		go sortEachPartition(partitions[i], jobs, results)
+	}
+	for j := 0; j < numPartitions; j++ {
+		jobs <- j
+	}
+	close(jobs)
+	// wait for results
+	for k := 0; k < numPartitions; k++ {
+		isSorted := <-results
+		if !isSorted {
+			panic("Not sorted")
 		}
 	}
 }

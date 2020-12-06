@@ -1,3 +1,4 @@
+// TODO: this is too complicated; simplify
 package main
 
 import (
